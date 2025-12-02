@@ -1,47 +1,74 @@
-1. Pourquoi stocker le prix unitaire dans la table lignes_commande plutôt que d’utiliser directement le prix du produit ?
-Le prix d’un produit peut changer dans le temps (promotion, augmentation, nouvelle version).
-Si on ne stocke que le prix dans la table produits, les anciennes commandes seraient faussées si le prix change.
-Solution choisie :
-    • Stocker le prix unitaire au moment de la commande dans lignes_commande.
-    • Cela permet de conserver un historique exact des achats et des montants payés.
-2️. Stratégie pour gérer les suppressions
-Relations principales :
-Relation
-Stratégie choisie
-Justification
-Client → Commande
-ON DELETE CASCADE
-Si un client est supprimé, ses commandes sont automatiquement supprimées pour garder la cohérence.
-Catégorie → Produit
-ON DELETE RESTRICT
-Une catégorie ne peut pas être supprimée si elle contient des produits.
-Commande → LigneCommande
-ON DELETE CASCADE
-Si une commande est supprimée, toutes ses lignes de commande sont supprimées automatiquement.
-Produit → LigneCommande
-ON DELETE RESTRICT
-Impossible de supprimer un produit qui est déjà dans des lignes de commande pour préserver l’historique des ventes.
-Optionnel : dans un futur développement, on pourrait utiliser un soft delete (deleted_at) pour les produits ou clients afin de conserver les données historiques tout en les masquant.
-3️. Gestion des stocks
-    • Le stock d’un produit est décrémenté après le paiement validé.
-    • Si un client ajoute un produit au panier mais que le paiement n’est pas encore effectué, le stock n’est pas bloqué.
-    • Si un produit est en rupture de stock, le client ne peut pas finaliser la commande.
-    • On peut envisager un alerte automatique ou un flag actif = FALSE pour les produits en rupture.
-4️. Index
-Pour améliorer la performance des recherches et des jointures, nous avons créé des index implicites ou uniques sur :
-    • clients.email → unicité et recherche rapide pour l’authentification.
-    • administrateurs.nom_utilisateur et email → unicité et login rapide.
-    • commandes.numero_commande → recherche rapide et unicité.
-Ces index permettent d’accélérer les requêtes JOIN, les WHERE et la vérification d’unicité.
-5️. Unicité du numéro de commande
-    • La colonne numero_commande de la table commandes est UNIQUE.
-    • Chaque commande possède un numéro différent, généré soit manuellement, soit automatiquement par le code (ex: CMD-0001, CMD-0002).
-    • Cela garantit qu’aucune commande ne peut être dupliquée ou confondue.
-6️. Extensions possibles du modèle
-    • Plusieurs adresses par client : table adresses liée à clients.
-    • Historique des prix : table historique_prix pour suivre les variations de prix d’un produit.
-    • Avis clients : table avis avec id_client, id_produit, note et commentaire.
-    • Images multiples par produit : table images_produits avec FK sur produits.
-    • Statistiques et rapports : ventes par produit, par catégorie, par client.
+Phase 1 – Conception de la base de données
+1. Pourquoi stocker le prix unitaire dans la table des lignes de commande plutôt que d'utiliser directement le prix du produit ?
 
+J’ai choisi de stocker le prix unitaire dans la table lignes_commande pour garder un historique exact du prix au moment de la commande.
+Si je n’utilisais que le prix du produit dans produits, toute modification ultérieure du prix affecterait les anciennes commandes, ce qui fausserait le montant total et les rapports financiers.
 
+2. Quelle stratégie avez-vous choisie pour gérer les suppressions ?
+
+Pour chaque relation j’ai fait les choix suivants :
+
+Produits → Catégories : ON DELETE SET NULL
+
+Si une catégorie est supprimée, les produits restent mais leur catégorie devient NULL.
+
+Lignes de commande → Commandes et Produits : ON DELETE CASCADE
+
+Si une commande est supprimée, toutes ses lignes sont automatiquement supprimées.
+
+Si un produit est supprimé, ses lignes associées sont supprimées pour garder l’intégrité.
+
+Clients → Commandes : ON DELETE CASCADE
+
+Si un client est supprimé, toutes ses commandes et lignes de commande sont supprimées automatiquement.
+
+Produits et commandes : j’ai aussi ajouté un champ actif pour soft delete de produit afin de pouvoir le retirer temporairement sans supprimer les lignes de commande existantes.
+
+3. Comment gérez-vous les stocks ?
+
+Lorsqu’un client passe une commande, je ne décrémente pas immédiatement le stock.
+
+Le stock est décrémenté seulement après la validation et le paiement de la commande, afin d’éviter les problèmes si le client abandonne son panier.
+
+Si un client tente de commander un produit en rupture de stock, la commande est bloquée ou un message l’informe que la quantité demandée n’est pas disponible.
+
+4. Avez-vous prévu des index ? Lesquels et pourquoi ?
+
+Oui, j’ai mis des index pour optimiser les requêtes fréquentes :
+
+email dans clients → UNIQUE, pour accélérer la recherche et garantir l’unicité.
+
+id_categorie dans produits → pour les recherches par catégorie.
+
+num_commande dans commandes → UNIQUE, pour retrouver rapidement une commande par son numéro.
+
+id_client dans commandes → pour retrouver toutes les commandes d’un client.
+
+5. Comment assurez-vous l'unicité du numéro de commande ?
+
+Le champ num_commande dans la table commandes est défini comme UNIQUE dans le MPD.
+Ainsi, PostgreSQL empêche toute duplication et garantit que chaque commande possède un numéro distinct.
+
+6. Quelles sont les extensions possibles de votre modèle ?
+
+Voici quelques améliorations possibles pour étendre le modèle :
+
+Gestion de plusieurs adresses par client → ajouter une table adresses_client.
+
+Historique des prix des produits → créer une table prix_historique.
+
+Avis clients → table avis pour stocker notes et commentaires.
+
+Images multiples par produit → table images_produit pour gérer plusieurs photos.
+
+Gestion des rôles administrateurs plus fine → table roles_admin pour gérer plusieurs permissions.
+
+7. Remarques générales
+
+J’ai utilisé PostgreSQL avec des types adaptés : SERIAL pour les IDs, BOOLEAN pour les flags (actif), TIMESTAMP pour les dates.
+
+Tous les mots de passe sont hachés et ne sont jamais stockés en clair.
+
+L’intégrité référentielle est assurée par les clés étrangères et les contraintes ON DELETE/ON UPDATE.
+
+Les tables sont normalisées en 3NF pour éviter les redondances et garantir la cohérence des données.
