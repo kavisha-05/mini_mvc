@@ -135,15 +135,28 @@ class Product
     public function save()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("INSERT INTO produit (nom, description, prix, stock, image_url, categorie_id) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([
-            $this->nom,
-            $this->description,
-            $this->prix,
-            $this->stock,
-            $this->image_url,
-            $this->categorie_id
-        ]);
+        
+        // Construit la requête dynamiquement selon si categorie_id est null ou non
+        if ($this->categorie_id !== null && $this->categorie_id !== '') {
+            $stmt = $pdo->prepare("INSERT INTO produit (nom, description, prix, stock, image_url, categorie_id) VALUES (?, ?, ?, ?, ?, ?)");
+            return $stmt->execute([
+                $this->nom,
+                $this->description,
+                $this->prix,
+                $this->stock,
+                $this->image_url,
+                $this->categorie_id
+            ]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO produit (nom, description, prix, stock, image_url) VALUES (?, ?, ?, ?, ?)");
+            return $stmt->execute([
+                $this->nom,
+                $this->description,
+                $this->prix,
+                $this->stock,
+                $this->image_url
+            ]);
+        }
     }
 
     /**
@@ -153,16 +166,30 @@ class Product
     public function update()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("UPDATE produit SET nom = ?, description = ?, prix = ?, stock = ?, image_url = ?, categorie_id = ? WHERE id = ?");
-        return $stmt->execute([
-            $this->nom,
-            $this->description,
-            $this->prix,
-            $this->stock,
-            $this->image_url,
-            $this->categorie_id,
-            $this->id
-        ]);
+        
+        // Construit la requête dynamiquement selon si categorie_id est null ou non
+        if ($this->categorie_id !== null && $this->categorie_id !== '') {
+            $stmt = $pdo->prepare("UPDATE produit SET nom = ?, description = ?, prix = ?, stock = ?, image_url = ?, categorie_id = ? WHERE id = ?");
+            return $stmt->execute([
+                $this->nom,
+                $this->description,
+                $this->prix,
+                $this->stock,
+                $this->image_url,
+                $this->categorie_id,
+                $this->id
+            ]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE produit SET nom = ?, description = ?, prix = ?, stock = ?, image_url = ?, categorie_id = NULL WHERE id = ?");
+            return $stmt->execute([
+                $this->nom,
+                $this->description,
+                $this->prix,
+                $this->stock,
+                $this->image_url,
+                $this->id
+            ]);
+        }
     }
 
     /**

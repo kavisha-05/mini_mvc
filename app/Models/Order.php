@@ -85,20 +85,65 @@ class Order
     // =====================
 
     /**
-     * Récupère toutes les commandes d'un utilisateur
+     * Récupère toutes les commandes d'un utilisateur avec leurs produits
      * @param int $user_id
      * @return array
      */
     public static function getByUserId($user_id)
     {
+        // Vérifie et crée les colonnes/tables nécessaires
+        \Mini\Core\MigrationHelper::ensureCommandeUserIdColumnExists();
+        
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("
-            SELECT * FROM commande 
-            WHERE user_id = ? 
-            ORDER BY created_at DESC
-        ");
-        $stmt->execute([$user_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convertit user_id en entier pour éviter les problèmes de type
+        $user_id = (int)$user_id;
+        
+        // Récupère les commandes
+        try {
+            $stmt = $pdo->prepare("
+                SELECT * FROM commande 
+                WHERE user_id = ? 
+                ORDER BY created_at DESC
+            ");
+            $stmt->execute([$user_id]);
+            $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            // Si created_at n'existe pas, on trie par id
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT * FROM commande 
+                    WHERE user_id = ? 
+                    ORDER BY id DESC
+                ");
+                $stmt->execute([$user_id]);
+                $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (\PDOException $e2) {
+                // Si même ça échoue, retourne un tableau vide
+                error_log("Erreur lors de la récupération des commandes pour user_id $user_id: " . $e2->getMessage());
+                return [];
+            }
+        }
+        
+        // Pour chaque commande, récupère ses produits
+        foreach ($orders as &$order) {
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT cp.*, p.nom as product_nom, p.image_url, p.description, cat.nom as categorie_nom
+                    FROM commande_produit cp
+                    INNER JOIN produit p ON cp.product_id = p.id
+                    LEFT JOIN categorie cat ON p.categorie_id = cat.id
+                    WHERE cp.commande_id = ?
+                ");
+                $stmt->execute([$order['id']]);
+                $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (\PDOException $e) {
+                error_log("Erreur lors de la récupération des produits pour la commande " . $order['id'] . ": " . $e->getMessage());
+                $order['products'] = [];
+            }
+        }
+        
+        return $orders;
     }
 
     /**
@@ -158,59 +203,143 @@ class Order
     /**
      * Crée une nouvelle commande à partir du panier
      * @param int $user_id
-     * @return int|false L'ID de la commande créée ou false en cas d'erreur
+     * @return array ['success' => bool, 'order_id' => int|null, 'error' => string|null]
      */
     public static function createFromCart($user_id)
     {
+        // Vérifie et crée les colonnes/tables nécessaires
+        \Mini\Core\MigrationHelper::ensureCommandeUserIdColumnExists();
+        \Mini\Core\MigrationHelper::ensureCartTableExists();
+        
         $pdo = Database::getPDO();
+        
+        // Convertit user_id en entier
+        $user_id = (int)$user_id;
         
         // Récupère les articles du panier
         $cartItems = Cart::getByUserId($user_id);
         
         if (empty($cartItems)) {
-            return false;
+            $error = "Panier vide pour user_id: $user_id";
+            error_log($error);
+            return ['success' => false, 'order_id' => null, 'error' => 'Votre panier est vide.'];
         }
         
         // Calcule le total
         $total = Cart::getTotalByUserId($user_id);
         
+        if ($total <= 0) {
+            $error = "Total invalide pour user_id: $user_id, total: $total";
+            error_log($error);
+            return ['success' => false, 'order_id' => null, 'error' => 'Le total de la commande est invalide.'];
+        }
+        
         try {
             $pdo->beginTransaction();
             
-            // Crée la commande
+            // Vérifie que la table commande existe et a les bonnes colonnes
+            $stmtCheck = $pdo->query("SHOW COLUMNS FROM commande");
+            $columns = $stmtCheck->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('user_id', $columns) || !in_array('statut', $columns) || !in_array('total', $columns)) {
+                throw new \Exception("La table commande n'a pas les colonnes nécessaires");
+            }
+            
+            // Crée la commande avec user_id, statut et total
             $stmt = $pdo->prepare("INSERT INTO commande (user_id, statut, total) VALUES (?, 'validee', ?)");
-            $stmt->execute([$user_id, $total]);
+            $result = $stmt->execute([$user_id, $total]);
+            
+            if (!$result) {
+                $errorInfo = $stmt->errorInfo();
+                throw new \Exception("Erreur SQL lors de l'insertion de la commande: " . ($errorInfo[2] ?? 'Erreur inconnue'));
+            }
+            
             $orderId = $pdo->lastInsertId();
+            
+            if (!$orderId || $orderId == 0) {
+                throw new \Exception("Impossible de récupérer l'ID de la commande créée");
+            }
+            
+            error_log("Commande créée avec succès: order_id=$orderId, user_id=$user_id, total=$total");
+            
+            // Vérifie que la table commande_produit existe, sinon on la crée
+            $stmtCheck = $pdo->query("SHOW TABLES LIKE 'commande_produit'");
+            if ($stmtCheck->rowCount() == 0) {
+                // Crée la table commande_produit si elle n'existe pas
+                $pdo->exec("CREATE TABLE IF NOT EXISTS commande_produit (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    commande_id INT NOT NULL,
+                    product_id INT NOT NULL,
+                    quantite INT NOT NULL DEFAULT 1,
+                    prix_unitaire DECIMAL(10,2) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            }
             
             // Ajoute les produits à la commande
             $stmt = $pdo->prepare("INSERT INTO commande_produit (commande_id, product_id, quantite, prix_unitaire) VALUES (?, ?, ?, ?)");
             
             foreach ($cartItems as $item) {
-                $product = Product::findById($item['id']);
+                // L'id retourné par Cart::getByUserId() est l'id du produit (p.*)
+                $product_id = $item['id'];
+                $product = Product::findById($product_id);
                 if ($product) {
-                    $stmt->execute([
+                    $result = $stmt->execute([
                         $orderId,
-                        $item['id'],
+                        $product_id,
                         $item['quantite'],
                         $product['prix']
                     ]);
                     
+                    if (!$result) {
+                        $errorInfo = $stmt->errorInfo();
+                        throw new \Exception("Erreur SQL lors de l'insertion du produit dans la commande: " . ($errorInfo[2] ?? 'Erreur inconnue'));
+                    }
+                    
                     // Met à jour le stock
                     $newStock = $product['stock'] - $item['quantite'];
                     $updateStmt = $pdo->prepare("UPDATE produit SET stock = ? WHERE id = ?");
-                    $updateStmt->execute([$newStock, $item['id']]);
+                    $updateResult = $updateStmt->execute([$newStock, $item['id']]);
+                    if (!$updateResult) {
+                        error_log("Erreur lors de la mise à jour du stock pour le produit $product_id");
+                        // On continue quand même
+                    }
+                } else {
+                    error_log("Produit introuvable: product_id=$product_id");
+                    throw new \Exception("Produit introuvable: ID $product_id");
                 }
             }
             
             // Vide le panier
-            Cart::clearByUserId($user_id);
+            $clearResult = Cart::clearByUserId($user_id);
+            if (!$clearResult) {
+                error_log("Erreur lors du vidage du panier pour user_id: $user_id");
+                // On continue quand même car la commande est créée
+            }
             
             $pdo->commit();
-            return $orderId;
+            error_log("Commande créée et panier vidé avec succès: order_id=$orderId, user_id=$user_id");
+            return ['success' => true, 'order_id' => $orderId, 'error' => null];
             
+        } catch (\PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $errorMsg = "Erreur de base de données: " . $e->getMessage();
+            if ($e->getCode() == 23000) {
+                $errorMsg = "Erreur de contrainte (clé étrangère): Vérifiez que l'utilisateur et les produits existent.";
+            }
+            error_log("Erreur PDO lors de la création de la commande pour user_id $user_id: " . $e->getMessage());
+            error_log("Code d'erreur: " . $e->getCode());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return ['success' => false, 'order_id' => null, 'error' => $errorMsg];
         } catch (\Exception $e) {
-            $pdo->rollBack();
-            return false;
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $errorMsg = "Erreur: " . $e->getMessage();
+            error_log("Erreur lors de la création de la commande pour user_id $user_id: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return ['success' => false, 'order_id' => null, 'error' => $errorMsg];
         }
     }
 

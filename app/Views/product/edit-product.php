@@ -1,6 +1,6 @@
-<!-- Formulaire pour créer un nouveau produit -->
+<!-- Formulaire pour modifier un produit -->
 <div class="form-container fade-in">
-    <h2>Ajouter un nouveau produit</h2>
+    <h2>Modifier le produit</h2>
     
     <!-- Message de succès ou d'erreur -->
     <?php if (isset($message)): ?>
@@ -9,7 +9,9 @@
         </div>
     <?php endif; ?>
     
-    <form method="POST" action="/products">
+    <form method="POST" action="/products/update">
+        <input type="hidden" name="id" value="<?= htmlspecialchars($product['id']) ?>">
+        
         <div class="form-group">
             <label for="nom">Nom du produit :</label>
             <input 
@@ -19,7 +21,7 @@
                 class="form-control"
                 required 
                 maxlength="150"
-                value="<?= isset($old_values['nom']) ? htmlspecialchars($old_values['nom']) : '' ?>"
+                value="<?= htmlspecialchars($product['nom']) ?>"
                 placeholder="Entrez le nom du produit"
             >
         </div>
@@ -32,7 +34,7 @@
                 class="form-control"
                 rows="4"
                 placeholder="Entrez la description du produit (optionnel)"
-            ><?= isset($old_values['description']) ? htmlspecialchars($old_values['description']) : '' ?></textarea>
+            ><?= htmlspecialchars($product['description'] ?? '') ?></textarea>
         </div>
         
         <div class="form-group">
@@ -45,7 +47,7 @@
                 required 
                 step="0.01"
                 min="0"
-                value="<?= isset($old_values['prix']) ? htmlspecialchars($old_values['prix']) : '' ?>"
+                value="<?= htmlspecialchars($product['prix']) ?>"
                 placeholder="0.00"
             >
         </div>
@@ -59,7 +61,7 @@
                 class="form-control"
                 required 
                 min="0"
-                value="<?= isset($old_values['stock']) ? htmlspecialchars($old_values['stock']) : '' ?>"
+                value="<?= htmlspecialchars($product['stock']) ?>"
                 placeholder="0"
             >
         </div>
@@ -72,7 +74,7 @@
                     <?php foreach ($categories as $categorie): ?>
                         <option 
                             value="<?= $categorie['id'] ?>"
-                            <?= (isset($old_values['categorie_id']) && $old_values['categorie_id'] == $categorie['id']) ? 'selected' : '' ?>
+                            <?= ($product['categorie_id'] == $categorie['id']) ? 'selected' : '' ?>
                         >
                             <?= htmlspecialchars($categorie['nom']) ?>
                         </option>
@@ -89,18 +91,18 @@
                 id="image_url" 
                 name="image_url" 
                 class="form-control"
-                value="<?= isset($old_values['image_url']) ? htmlspecialchars($old_values['image_url']) : '' ?>"
+                value="<?= htmlspecialchars($product['image_url'] ?? '') ?>"
                 placeholder="https://exemple.com/image.jpg"
             >
             <small style="display: block; margin-top: 5px; color: var(--gris-fonce);">Entrez l'URL complète de l'image (optionnel)</small>
         </div>
         
         <!-- Aperçu de l'image si une URL est fournie -->
-        <?php if (!empty($old_values['image_url']) && filter_var($old_values['image_url'], FILTER_VALIDATE_URL)): ?>
+        <?php if (!empty($product['image_url']) && filter_var($product['image_url'], FILTER_VALIDATE_URL)): ?>
             <div class="form-group">
                 <label>Aperçu de l'image :</label>
                 <img 
-                    src="<?= htmlspecialchars($old_values['image_url']) ?>" 
+                    src="<?= htmlspecialchars($product['image_url']) ?>" 
                     alt="Aperçu" 
                     style="max-width: 100%; max-height: 300px; border: 3px solid var(--jaune-principal); border-radius: 15px; object-fit: contain; padding: 10px; background: var(--jaune-clair);"
                     onerror="this.style.display='none'"
@@ -109,12 +111,12 @@
         <?php endif; ?>
         
         <button type="submit" class="btn btn-primary" style="width: 100%;">
-            Créer le produit
+            Enregistrer les modifications
         </button>
     </form>
     
     <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <a href="/products/show?id=<?= htmlspecialchars($product['id']) ?>" class="btn btn-secondary">← Retour aux détails</a>
         <a href="/products" class="btn btn-secondary">📋 Liste des produits</a>
-        <a href="/" class="btn btn-secondary">← Retour à l'accueil</a>
     </div>
 </div>
