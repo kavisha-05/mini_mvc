@@ -15,7 +15,14 @@ final class CartController extends Controller
      */
     public function show(): void
     {
-        $user_id = $_GET['user_id'] ?? 1; // Par défaut user_id = 1 pour la démo
+        // Utilise l'ID de l'utilisateur connecté ou celui en paramètre
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $user_id = $_SESSION['user_id'] ?? $_GET['user_id'] ?? 1;
+        
+        // Vérifie et crée les tables si nécessaire
+        \Mini\Core\MigrationHelper::ensureCartTableExists();
         
         // Ici je récupère les produits du panier de l'user authentifié
         $cartItems = Cart::getByUserId($user_id);
@@ -133,9 +140,16 @@ final class CartController extends Controller
             return;
         }
         
+        // Vérifie et crée les tables si nécessaire
+        \Mini\Core\MigrationHelper::ensureCartTableExists();
+        
+        // Utilise l'ID de l'utilisateur connecté ou celui en paramètre
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         $product_id = $_POST['product_id'] ?? null;
         $quantite = intval($_POST['quantite'] ?? 1);
-        $user_id = $_POST['user_id'] ?? $_GET['user_id'] ?? 1; // Par défaut user_id = 1 pour la démo
+        $user_id = $_SESSION['user_id'] ?? $_POST['user_id'] ?? $_GET['user_id'] ?? 1;
         
         if (!$product_id) {
             header('Location: /products');

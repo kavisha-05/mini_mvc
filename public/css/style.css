@@ -1,0 +1,588 @@
+/* Design moderne avec tons rose pastel et jaune */
+:root {
+    --mint-cream: #eff7f6;
+    --petal-frost: #f7d6e0;
+    --blush-pop: #f2b5d4;
+    --rose-intense-menu: #e8a0c4;
+    --rose-principal: #f2b5d4;
+    --rose-clair: #f7d6e0;
+    --rose-fonce: #f2b5d4;
+    --rose-doux: #f7d6e0;
+    --rose-intense: #f2b5d4;
+    --jaune-principal: #fff4b3;
+    --jaune-clair: #fffce6;
+    --jaune-fonce: #ffe680;
+    --jaune-doux: #fff9d9;
+    --blanc: #ffffff;
+    --gris-clair: #f8f9fa;
+    --gris-moyen: #e9ecef;
+    --gris-fonce: #6c757d;
+    --noir: #212529;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--petal-frost) 0%, var(--blush-pop) 30%, var(--mint-cream) 60%, var(--blush-pop) 80%, var(--petal-frost) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--noir);
+    line-height: 1.6;
+}
+
+/* Header - Rose intense */
+header {
+    background: var(--rose-intense-menu) !important;
+    box-shadow: 0 4px 20px rgba(232, 160, 196, 0.4) !important;
+    padding: 25px 0 !important;
+    margin-bottom: 30px !important;
+}
+
+header h1 a {
+    color: var(--blanc) !important;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+    font-size: 32px;
+    transition: transform 0.3s;
+}
+
+header h1 a:hover {
+    transform: scale(1.05);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+nav a {
+    color: var(--blanc) !important;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 30px;
+    display: inline-block;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+nav a:hover {
+    background: rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+nav a.active,
+nav a[style*="#ffc107"] {
+    background: var(--jaune-principal) !important;
+    color: var(--noir) !important;
+    border-color: var(--blanc);
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+}
+
+/* Conteneurs principaux */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 30px;
+    background: var(--blanc);
+    border-radius: 25px;
+    box-shadow: 0 15px 40px rgba(242, 181, 212, 0.25);
+    margin-bottom: 30px;
+    border: 3px solid var(--blush-pop);
+    position: relative;
+}
+
+/* Boutons - Uniquement rose et jaune, pas de dégradés */
+.btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    border: 3px solid transparent;
+}
+
+.btn-primary {
+    background: var(--blush-pop);
+    color: var(--blanc);
+    border-color: var(--petal-frost);
+}
+
+.btn-primary:hover {
+    background: var(--petal-frost);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(242, 181, 212, 0.4);
+    border-color: var(--blush-pop);
+}
+
+.btn-success {
+    background: var(--jaune-principal);
+    color: var(--noir);
+    border-color: var(--jaune-fonce);
+}
+
+.btn-success:hover {
+    background: var(--jaune-fonce);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 230, 128, 0.3);
+    border-color: var(--jaune-principal);
+}
+
+.btn-warning {
+    background: var(--jaune-principal);
+    color: var(--noir);
+    border-color: var(--jaune-fonce);
+}
+
+.btn-warning:hover {
+    background: var(--jaune-fonce);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 230, 128, 0.3);
+}
+
+.btn-danger {
+    background: var(--blush-pop);
+    color: var(--blanc);
+    border-color: var(--petal-frost);
+}
+
+.btn-danger:hover {
+    background: var(--petal-frost);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(242, 181, 212, 0.4);
+    border-color: var(--blush-pop);
+}
+
+.btn-info {
+    background: var(--blush-pop);
+    color: var(--blanc);
+    border-color: var(--rose-intense-menu);
+}
+
+.btn-info:hover {
+    background: var(--rose-intense-menu);
+    color: var(--blanc);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(232, 160, 196, 0.4);
+    border-color: var(--blush-pop);
+}
+
+.btn-secondary {
+    background: var(--jaune-clair);
+    color: var(--jaune-fonce);
+    border-color: var(--jaune-principal);
+}
+
+.btn-secondary:hover {
+    background: var(--jaune-principal);
+    color: var(--noir);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 244, 179, 0.3);
+    border-color: var(--jaune-fonce);
+}
+
+/* Cartes de produits */
+.product-card {
+    border: 3px solid var(--blush-pop);
+    border-radius: 25px;
+    padding: 25px;
+    background: var(--blanc);
+    box-shadow: 0 8px 25px rgba(242, 181, 212, 0.2);
+    transition: all 0.4s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--jaune-principal);
+}
+
+.product-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(242, 181, 212, 0.3);
+    border-color: var(--blush-pop);
+}
+
+.product-card img {
+    border-radius: 20px;
+    margin-bottom: 20px;
+    border: 4px solid var(--jaune-clair);
+    box-shadow: 0 4px 15px rgba(255, 244, 179, 0.2);
+}
+
+.product-card h3 {
+    color: var(--rose-intense-menu);
+    margin-bottom: 12px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.product-price {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--rose-intense-menu);
+    margin: 20px 0;
+    text-shadow: 1px 1px 2px rgba(232, 160, 196, 0.15);
+}
+
+/* Formulaires */
+.form-container {
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 50px 40px;
+    background: var(--blanc);
+    border-radius: 25px;
+    box-shadow: 0 15px 40px rgba(242, 181, 212, 0.2);
+    border: 3px solid var(--blush-pop);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: var(--rose-intense-menu);
+    font-size: 18px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 18px;
+    border: 3px solid var(--petal-frost);
+    border-radius: 15px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: var(--petal-frost);
+    font-weight: 500;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--blush-pop);
+    background: var(--blanc);
+    box-shadow: 0 0 0 4px rgba(242, 181, 212, 0.2);
+    transform: scale(1.02);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+}
+
+select.form-control {
+    cursor: pointer;
+}
+
+/* Messages */
+.alert {
+    padding: 18px 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    border: 3px solid;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, var(--jaune-clair) 0%, var(--jaune-doux) 100%);
+    border-color: var(--jaune-principal);
+    color: var(--jaune-fonce);
+}
+
+.alert-error {
+    background: linear-gradient(135deg, var(--petal-frost) 0%, var(--blush-pop) 100%);
+    border-color: var(--blush-pop);
+    color: var(--rose-intense-menu);
+}
+
+.alert-info {
+    background: var(--petal-frost);
+    border-color: var(--blush-pop);
+    color: var(--rose-intense-menu);
+}
+
+/* Grille de produits */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+/* Titres */
+h1, h2 {
+    color: var(--rose-intense-menu);
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 800;
+}
+
+h1 {
+    font-size: 42px;
+    color: var(--rose-intense-menu);
+    text-shadow: 2px 2px 4px rgba(232, 160, 196, 0.2);
+}
+
+h2 {
+    font-size: 32px;
+    color: var(--rose-intense-menu);
+}
+
+/* Liens */
+a {
+    color: var(--rose-intense-menu);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+a:hover {
+    color: var(--blush-pop);
+    text-decoration: underline;
+    transform: translateX(3px);
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 2px solid;
+}
+
+.badge-category {
+    background: var(--jaune-clair);
+    color: var(--jaune-fonce);
+    border-color: var(--jaune-principal);
+}
+
+.badge-stock {
+    background: var(--petal-frost);
+    color: var(--rose-intense-menu);
+    border-color: var(--blush-pop);
+}
+
+/* Boutons d'action */
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-small {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 25px;
+    font-weight: 700;
+}
+
+/* Page d'accueil */
+.hero-section {
+    text-align: center;
+    padding: 80px 30px;
+    background: linear-gradient(135deg, var(--blush-pop) 0%, var(--petal-frost) 30%, var(--jaune-principal) 50%, var(--petal-frost) 70%, var(--blush-pop) 100%);
+    border-radius: 25px;
+    color: var(--blanc);
+    margin-bottom: 50px;
+    box-shadow: 0 15px 40px rgba(242, 181, 212, 0.4);
+    border: 4px solid var(--jaune-principal);
+}
+
+.hero-section h1 {
+    color: var(--blanc);
+    -webkit-text-fill-color: var(--blanc);
+    font-size: 48px;
+    margin-bottom: 25px;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    font-weight: 900;
+}
+
+.hero-section p {
+    font-size: 22px;
+    margin-bottom: 35px;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+/* Navigation breadcrumb */
+.breadcrumb {
+    margin-bottom: 25px;
+    padding: 15px 0;
+}
+
+.breadcrumb a {
+    color: var(--rose-intense-menu);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.breadcrumb span {
+    color: var(--gris-fonce);
+    margin: 0 10px;
+}
+
+/* Détails produit */
+.product-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    margin-bottom: 40px;
+}
+
+.product-detail img {
+    border-radius: 25px;
+    border: 5px solid var(--blush-pop);
+    box-shadow: 0 15px 40px rgba(242, 181, 212, 0.2);
+}
+
+/* Panier */
+.cart-item {
+    background: var(--blanc);
+    border: 3px solid var(--blush-pop);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(242, 181, 212, 0.15);
+}
+
+.cart-item:hover {
+    border-color: var(--blush-pop);
+    box-shadow: 0 8px 30px rgba(242, 181, 212, 0.25);
+    transform: translateY(-3px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-detail {
+        grid-template-columns: 1fr;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    nav ul {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    nav a {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .container {
+        padding: 25px 20px;
+    }
+    
+    .form-container {
+        padding: 35px 25px;
+    }
+    
+    .cart-item {
+        flex-direction: column;
+    }
+    
+    .cart-item > div:first-child {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+    width: 14px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--jaune-clair);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--blush-pop);
+    border-radius: 7px;
+    border: 2px solid var(--petal-frost);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--rose-intense-menu);
+}
+
+/* Améliorations visuelles supplémentaires */
+
+/* Effets de brillance sur les boutons */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}

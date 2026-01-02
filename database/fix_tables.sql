@@ -1,34 +1,7 @@
--- Migration pour ajouter les tables catégorie, panier, commande et commande_produit
+-- Script de correction pour créer les tables manquantes
 -- Exécutez ce script dans votre base de données MySQL/MariaDB
 
--- 1. Création de la table catégorie
-CREATE TABLE IF NOT EXISTS categorie (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(150) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 2. Modification de la table produit pour ajouter la clé étrangère vers catégorie
--- NOTE: Si la colonne existe déjà, cette commande échouera. 
--- Dans ce cas, exécutez seulement la partie ADD CONSTRAINT (en commentant ADD COLUMN)
--- Vérifiez d'abord si la colonne existe avec: SHOW COLUMNS FROM produit LIKE 'categorie_id';
-
--- Étape 1: Ajouter la colonne (si elle n'existe pas déjà)
-ALTER TABLE produit 
-ADD COLUMN categorie_id INT NULL;
-
--- Étape 2: Ajouter la contrainte de clé étrangère (si elle n'existe pas déjà)
--- Si la contrainte existe déjà, cette commande échouera - c'est normal
-ALTER TABLE produit 
-ADD CONSTRAINT fk_produit_categorie 
-    FOREIGN KEY (categorie_id) 
-    REFERENCES categorie(id) 
-    ON DELETE SET NULL 
-    ON UPDATE CASCADE;
-
--- 3. Création de la table panier
+-- 1. Création de la table panier (si elle n'existe pas)
 CREATE TABLE IF NOT EXISTS panier (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -49,7 +22,7 @@ CREATE TABLE IF NOT EXISTS panier (
     UNIQUE KEY unique_user_product (user_id, product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Création de la table commande
+-- 2. Création de la table commande (si elle n'existe pas)
 CREATE TABLE IF NOT EXISTS commande (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -64,7 +37,7 @@ CREATE TABLE IF NOT EXISTS commande (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Création de la table commande_produit (table de liaison)
+-- 3. Création de la table commande_produit (si elle n'existe pas)
 CREATE TABLE IF NOT EXISTS commande_produit (
     id INT AUTO_INCREMENT PRIMARY KEY,
     commande_id INT NOT NULL,
@@ -84,7 +57,7 @@ CREATE TABLE IF NOT EXISTS commande_produit (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Insertion de catégories de produits de beauté
+-- 4. Insertion des catégories de produits de beauté
 INSERT INTO categorie (nom, description) VALUES
 ('Essences', 'Essences hydratantes et régénérantes pour la peau'),
 ('Sérums', 'Sérums concentrés pour des soins ciblés'),
@@ -96,4 +69,10 @@ INSERT INTO categorie (nom, description) VALUES
 ('Soins yeux', 'Crèmes et sérums spécialisés pour le contour des yeux'),
 ('Soins lèvres', 'Baumes et soins pour les lèvres')
 ON DUPLICATE KEY UPDATE nom=nom;
+
+-- 5. Vérification et correction de la table commande si user_id n'existe pas
+-- (Cette partie ne sera exécutée que si nécessaire)
+-- Si vous obtenez une erreur sur user_id, exécutez manuellement :
+-- ALTER TABLE commande ADD COLUMN user_id INT NOT NULL AFTER id;
+-- ALTER TABLE commande ADD CONSTRAINT fk_commande_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE ON UPDATE CASCADE;
 

@@ -15,7 +15,15 @@ final class OrderController extends Controller
      */
     public function listByUser(): void
     {
-        $user_id = $_GET['user_id'] ?? 1; // Par défaut user_id = 1 pour la démo
+        // Vérifie et crée la colonne user_id si nécessaire
+        \Mini\Core\MigrationHelper::ensureCommandeUserIdColumnExists();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Priorité : session > GET > 1
+        $user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : (isset($_GET['user_id']) ? (int)$_GET['user_id'] : 1);
         
         $orders = Order::getByUserId($user_id);
         
@@ -44,6 +52,9 @@ final class OrderController extends Controller
      */
     public function show(): void
     {
+        // Vérifie et crée la colonne user_id si nécessaire
+        \Mini\Core\MigrationHelper::ensureCommandeUserIdColumnExists();
+        
         $id = $_GET['id'] ?? null;
         
         if (!$id) {
@@ -82,6 +93,10 @@ final class OrderController extends Controller
      */
     public function create(): void
     {
+        // Vérifie et crée les colonnes/tables nécessaires
+        \Mini\Core\MigrationHelper::ensureCommandeUserIdColumnExists();
+        \Mini\Core\MigrationHelper::ensureCartTableExists();
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /cart?user_id=' . ($_GET['user_id'] ?? 1));
             return;
@@ -92,7 +107,12 @@ final class OrderController extends Controller
             $input = $_POST;
         }
         
-        $user_id = $input['user_id'] ?? $_GET['user_id'] ?? 1;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Priorité : POST > session > GET > 1
+        $user_id = isset($input['user_id']) ? (int)$input['user_id'] : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : (isset($_GET['user_id']) ? (int)$_GET['user_id'] : 1));
         
         // Vérifie que le panier n'est pas vide
         $cartItems = Cart::getByUserId($user_id);
@@ -102,12 +122,26 @@ final class OrderController extends Controller
         }
         
         // Crée la commande
-        $orderId = Order::createFromCart($user_id);
-        
-        if ($orderId) {
-            header('Location: /orders/show?id=' . $orderId . '&success=created');
-        } else {
-            header('Location: /cart?user_id=' . $user_id . '&error=create_failed');
+        try {
+            $result = Order::createFromCart($user_id);
+            
+            if ($result['success'] && $result['order_id']) {
+                // Redirige vers la liste des commandes avec le user_id de la session
+                $redirect_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : $user_id;
+                // Utilise exit() pour s'assurer que la redirection fonctionne
+                header('Location: /orders?user_id=' . $redirect_user_id . '&success=created');
+                exit();
+            } else {
+                // Affiche l'erreur retournée par createFromCart
+                $errorMsg = $result['error'] ?? 'Erreur inconnue lors de la création de la commande';
+                error_log("Échec de la création de la commande pour user_id $user_id: $errorMsg");
+                header('Location: /cart?user_id=' . $user_id . '&error=create_failed&msg=' . urlencode($errorMsg));
+                exit();
+            }
+        } catch (\Exception $e) {
+            error_log("Exception lors de la création de la commande: " . $e->getMessage());
+            header('Location: /cart?user_id=' . $user_id . '&error=create_failed&msg=' . urlencode($e->getMessage()));
+            exit();
         }
     }
 

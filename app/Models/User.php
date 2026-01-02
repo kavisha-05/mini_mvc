@@ -11,6 +11,7 @@ class User
     private $id;
     private $nom;
     private $email;
+    private $password;
 
     // =====================
     // Getters / Setters
@@ -44,6 +45,16 @@ class User
     public function setEmail($email)
     {
         $this->email = $email;
+    }
+
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    public function setPassword($password)
+    {
+        $this->password = $password;
     }
 
     // =====================
@@ -94,19 +105,29 @@ class User
     public function save()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("INSERT INTO user (nom, email) VALUES (?, ?)");
-        return $stmt->execute([$this->nom, $this->email]);
+        if ($this->password) {
+            $stmt = $pdo->prepare("INSERT INTO user (nom, email, password) VALUES (?, ?, ?)");
+            return $stmt->execute([$this->nom, $this->email, $this->password]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO user (nom, email) VALUES (?, ?)");
+            return $stmt->execute([$this->nom, $this->email]);
+        }
     }
 
     /**
-     * Met à jour les informations d’un utilisateur existant
+     * Met à jour les informations d'un utilisateur existant
      * @return bool
      */
     public function update()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("UPDATE user SET nom = ?, email = ? WHERE id = ?");
-        return $stmt->execute([$this->nom, $this->email, $this->id]);
+        if ($this->password) {
+            $stmt = $pdo->prepare("UPDATE user SET nom = ?, email = ?, password = ? WHERE id = ?");
+            return $stmt->execute([$this->nom, $this->email, $this->password, $this->id]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE user SET nom = ?, email = ? WHERE id = ?");
+            return $stmt->execute([$this->nom, $this->email, $this->id]);
+        }
     }
 
     /**
